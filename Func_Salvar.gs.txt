@@ -1,0 +1,74 @@
+function salvarAgendamento(dados) {
+  try {
+    // ID da planilha do Google
+    var spreadsheetId = "1TIdQXug57efyUSenWttRwJED0EyDtoHApIHnAgGGI1E";
+    // Nome da aba na planilha
+    var sheetName = "Banco";
+
+    // Abre a planilha e obtém a aba
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var guiaBanco = ss.getSheetByName(sheetName);
+
+    // Obtém a última linha preenchida na guia "Banco"
+    var ultimaLinha = guiaBanco.getLastRow();
+
+    // Incrementa a última linha para adicionar o novo registro
+    ultimaLinha = ultimaLinha + 1;
+
+    // A data já vem no formato correto do formulário como string (YYYY-MM-DD)
+    var data = dados.data;  // Não estamos mais convertendo para objeto Date
+
+    // Separando a data para formatar no estilo DD-MM-YYYY
+    var partesData = data.split("-"); // Formato recebido é "YYYY-MM-DD"
+    var dataFormatada = partesData[2] + "-" + partesData[1] + "-" + partesData[0]; // Formato DD-MM-YYYY
+
+    // Preparar os dados para inserção na planilha
+    var dadosParaInserir = [
+      [
+        dataFormatada,        // Coluna A: Data (agora no formato DD-MM-YYYY)
+        dados.nome,           // Coluna B: Nome
+        dados.casa,           // Coluna C: Casa
+        dados.telefone,       // Coluna D: Telefone
+        dados.email,          // Coluna E: E-mail
+        dados.descricao       // Coluna F: Descrição do evento
+      ]
+    ];
+
+    // Inserir os dados na planilha
+    guiaBanco.getRange(ultimaLinha, 1, 1, 6).setValues(dadosParaInserir);
+
+    // Configurar a lista suspensa (coluna G) com as opções "Sim" ou "Não"
+    var rangeColunaG = guiaBanco.getRange(ultimaLinha, 7); // Coluna G
+    var validacao = SpreadsheetApp.newDataValidation()
+      .requireValueInList(['Sim', 'Não'], true)  // Opções da lista suspensa
+      .setAllowInvalid(false)
+      .build();
+    
+    // Aplica a validação na célula da coluna G
+    rangeColunaG.setDataValidation(validacao);
+    
+    // Definir o valor padrão como "Não"
+    rangeColunaG.setValue("Não");
+
+    // Envio do e-mail para o síndico
+    try {
+      var email = "sindico.cantodospassaros@gmail.com";
+      var assunto = "Novo agendamento registrado";
+      var mensagem = "Um novo agendamento foi realizado. Confira os detalhes abaixo:\n\n" +
+                     "Nome: " + dados.nome + "\n" +
+                     "Data: " + dataFormatada + "\n" +
+                     "Casa: " + dados.casa + "\n" +
+                     "Descrição: " + dados.descricao;
+      
+      MailApp.sendEmail(email, assunto, mensagem);
+    } catch (emailError) {
+      console.error("Erro ao enviar e-mail: " + emailError.message);
+    }
+
+    // Retorna uma mensagem de sucesso
+    return "Agendamento salvo com sucesso!";
+  } catch (error) {
+    // Retorna a mensagem de erro em caso de problemas
+    return "Erro ao salvar o agendamento: " + error.message;
+  }
+}

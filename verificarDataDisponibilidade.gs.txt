@@ -1,0 +1,68 @@
+function verificarDataDisponibilidade(data) {
+  try {
+    // ID da planilha do Google
+    var spreadsheetId = "1TIdQXug57efyUSenWttRwJED0EyDtoHApIHnAgGGI1E";
+    // Nome da aba na planilha
+    var sheetName = "Banco";
+
+    // Abre a planilha e obtém a aba
+    var ss = SpreadsheetApp.openById(spreadsheetId);
+    var guiaBanco = ss.getSheetByName(sheetName);
+
+    // Função para verificar se a data já existe na planilha
+    var dataExistente = verificarDataExistente(data, guiaBanco);
+
+    // Exibe uma caixa de mensagem informando se a data está disponível
+    exibirMensagem(dataExistente);
+
+    // Retorna true (data disponível) ou false (data não disponível)
+    return !dataExistente;
+  } catch (error) {
+    Logger.log("Erro ao verificar a data: " + error);
+    return false; // Se houver erro, assume que a data não está disponível
+  }
+}
+
+// Função para verificar se a data já existe na planilha
+function verificarDataExistente(data, guiaBanco) {
+  var colunaData = guiaBanco.getRange("A:A").getValues(); // Coluna A (Data)
+  
+  // Converte a data recebida para o formato "DD-MM-YYYY" sem fuso horário
+  var dataFormatada = formatarDataSemFuso(data);
+  
+  // Percorre a coluna de datas para verificar se a data já foi agendada
+  for (var i = 0; i < colunaData.length; i++) {
+    // Converte a data da planilha para "DD-MM-YYYY" sem fuso horário
+    var dataPlanilha = formatarDataSemFuso(colunaData[i][0]);
+    
+    // Compara as datas
+    if (dataPlanilha === dataFormatada) {
+      return true; // A data já existe
+    }
+  }
+  
+  return false; // A data não existe
+}
+
+// Função para formatar a data no formato "DD-MM-YYYY" sem influência de fuso horário
+function formatarDataSemFuso(data) {
+  // Garantir que a data seja em formato UTC, sem hora, apenas o valor da data
+  var dataObj = new Date(data);
+  dataObj.setMinutes(dataObj.getMinutes() - dataObj.getTimezoneOffset()); // Ajusta para UTC
+  
+  // Formata a data para "DD-MM-YYYY"
+  var dia = ('0' + dataObj.getDate()).slice(-2);
+  var mes = ('0' + (dataObj.getMonth() + 1)).slice(-2);
+  var ano = dataObj.getFullYear();
+  
+  return dia + '-' + mes + '-' + ano; // Retorna no formato "DD-MM-YYYY"
+}
+
+// Função para exibir a caixa de mensagem
+function exibirMensagem(dataExistente) {
+  var ui = SpreadsheetApp.getUi(); // Obtém a interface de usuário da planilha
+  var mensagem = dataExistente ? "A data já está agendada!" : "A data está disponível!";
+  
+  // Exibe a caixa de mensagem com a resposta
+  ui.alert("Resultado", mensagem, ui.ButtonSet.OK);
+}

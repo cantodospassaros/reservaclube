@@ -1,0 +1,19 @@
+function verificarDisponibilidade() {
+  var data = document.getElementById('data').value;
+  
+  if (!data) {
+    alert("Por favor, selecione uma data.");
+    return;
+  }
+
+  // Log da data selecionada
+  console.log("Data selecionada: " + data);
+
+  // Chama a função do Apps Script para verificar a disponibilidade da data
+  google.script.run.withSuccessHandler(function(response) {
+    // Exibe a resposta "Sim" ou "Não" dependendo da disponibilidade
+    console.log("Resposta da verificação: " + response); // Log da resposta
+
+  
+  }).verificarDataDisponibilidade(data);
+}
